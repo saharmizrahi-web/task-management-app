@@ -47,7 +47,7 @@ const RULES: [RegExp, HolidayKind, string?][] = [
   [/^Erev Shavuot$/, "erev"],
   [/^Shavuot$/, "chag"],
   [/^Tzom Tammuz$/, "fast"],
-  [/^Erev Tish'a B'Av$/, "erev"],
+  [/^Erev Tish'a B'Av$/, "fast"], // the fast starts that evening; not an erev chag, so no vacation tint
   [/^Tish'a B'Av$/, "fast", "צום תשעה באב"],
   [/^Tish'a B'Av \(observed\)$/, "fast", "צום תשעה באב (נדחה)"],
   [/^Rosh Chodesh /, "roshchodesh"],

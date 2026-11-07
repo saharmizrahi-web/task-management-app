@@ -27,9 +27,9 @@ export const VIEW_META: Record<ViewType, { label: string; description: string }>
 export const HOLIDAY_META: Record<HolidayKind, { color: string; rank: number; dayOff: boolean }> = {
   chag: { color: "#c2410c", rank: 0, dayOff: true },
   cholhamoed: { color: "#c2410c", rank: 1, dayOff: true },
-  erev: { color: "#b45309", rank: 2, dayOff: false },
+  erev: { color: "#b45309", rank: 2, dayOff: true },
   fast: { color: "#b91c1c", rank: 3, dayOff: false },
-  hanukkah: { color: "#ea580c", rank: 4, dayOff: false },
+  hanukkah: { color: "#ea580c", rank: 4, dayOff: true },
   other: { color: "#4f46e5", rank: 5, dayOff: false },
   roshchodesh: { color: "#15803d", rank: 6, dayOff: false },
 };

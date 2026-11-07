@@ -22,7 +22,7 @@ import type { Holiday, Space, Task } from "@/lib/types";
 
 const MAX_CHIPS = 3;
 
-// Pastel backgrounds for Friday/Saturday and for chag / chol hamoed (vacation wins when both apply).
+// Pastel backgrounds for Friday/Saturday and for chag, erev chag, chol hamoed and Chanukah (vacation wins when both apply).
 const DAY_TONE = {
   plain: { in: "bg-white hover:bg-slate-50", out: "bg-slate-50/60", swatch: "" },
   weekend: { in: "bg-[#eef1fb] hover:bg-[#e6eaf8]", out: "bg-[#eef1fb]/50", swatch: "bg-[#eef1fb]" },
@@ -144,7 +144,7 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
             <span className={`h-3 w-3 rounded border border-line ${DAY_TONE.weekend.swatch}`} /> שישי ושבת
           </span>
           <span className="flex items-center gap-1.5">
-            <span className={`h-3 w-3 rounded border border-line ${DAY_TONE.vacation.swatch}`} /> חג וחול המועד
+            <span className={`h-3 w-3 rounded border border-line ${DAY_TONE.vacation.swatch}`} /> חגים וחופשות
           </span>
           <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="mr-auto hover:underline">
             חגים: Hebcal.com

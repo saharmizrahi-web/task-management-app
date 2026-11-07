@@ -5,16 +5,19 @@
 - מרחבים עם צבע ותצוגה לבחירה: קנבן, רשימת TODO, לוח שנה
 - דשבורד: דחוף, להיום, באיחור וכרטיס לכל מרחב
 - סוכן בצ'אט עם 5 כלים (קריאה, הוספה, עדכון, מחיקה, סיכום), פועל רק על ההקשר שנבחר, ומבקש אישור לפני פעולה על יותר מ-3 משימות או מחיקה
+- כניסה בסיסמה אחת (`APP_PASSWORD`). כל דף ו-API חסומים בלי התחברות (`proxy.ts`)
 
 ## הרצה
 
 ```bash
 npm install
-cp .env.example .env.local   # ממלאים DATABASE_URL, OPENAI_API_KEY
-npm run db:setup             # יוצר טבלאות
-npm run db:seed              # נתוני דוגמה (רק אם אין נתונים)
+npx vercel env pull env/.env   # או: cp .env.example env/.env וממלאים
+npm run db:setup               # יוצר טבלאות
+npm run db:seed                # נתוני דוגמה (רק אם אין נתונים)
 npm run dev
 ```
+
+הסקריפטים קוראים את `env/.env`, ואז `.env.local` ו-`.env`. כל קבצי ה-env מוחרגים מ-git.
 
 ## משתני סביבה
 
@@ -22,6 +25,10 @@ npm run dev
 |---|---|
 | `DATABASE_URL` | חיבור ל-Postgres |
 | `OPENAI_API_KEY` | מפתח OpenAI לסוכן |
+| `APP_PASSWORD` | הסיסמה לכניסה למערכת. בלעדיה אי אפשר להיכנס |
+| `SESSION_SECRET` | מומלץ. סוד לחתימת ה-session ואישורי הסוכן (ברירת מחדל: נגזר מ-`DATABASE_URL`) |
 | `OPENAI_MODEL` | אופציונלי, ברירת מחדל `gpt-6-luna` |
+
+שינוי `APP_PASSWORD` מנתק את כל ה-sessions הקיימים.
 
 הטבלאות נושאות קידומת `ms_` כדי לא להתנגש בטבלאות אחרות באותו מסד.

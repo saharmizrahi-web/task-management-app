@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, CheckCheck, Columns3, LayoutDashboard, ListChecks, Plus, X } from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, CheckCheck, Columns3, LayoutDashboard, ListChecks, LogOut, Plus, X } from "lucide-react";
 import { useData } from "./DataProvider";
 import type { ViewType } from "@/lib/types";
 import { isOverdue } from "./ui";
@@ -16,6 +17,16 @@ const VIEW_ICON: Record<ViewType, React.ReactNode> = {
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { spaces, tasks, today, openSpace } = useData();
   const pathname = usePathname();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function logout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/login", { method: "DELETE" });
+    } finally {
+      window.location.href = "/login";
+    }
+  }
 
   return (
     <>
@@ -91,6 +102,16 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             <Plus size={16} /> מרחב חדש
           </button>
         </nav>
+
+        <div className="border-t border-line px-3 py-3">
+          <button
+            onClick={logout}
+            disabled={loggingOut}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+          >
+            <LogOut size={18} /> {loggingOut ? "יוצא..." : "יציאה"}
+          </button>
+        </div>
 
         <div className="pb-20" />
       </aside>

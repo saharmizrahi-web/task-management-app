@@ -24,6 +24,13 @@ export async function POST(req: Request) {
 
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
-  res.cookies.delete(SESSION_COOKIE);
+  // Explicit path: without it the browser scopes the expiry to /api and the real cookie survives.
+  res.cookies.set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
   return res;
 }

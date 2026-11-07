@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
+  const [visible, setVisible] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -48,15 +49,29 @@ export default function LoginPage() {
         <label htmlFor="password" className="label">
           סיסמה
         </label>
-        <input
-          id="password"
-          type="password"
-          autoFocus
-          autoComplete="current-password"
-          className="field"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative">
+          <input
+            id="password"
+            type={visible ? "text" : "password"}
+            autoFocus
+            autoComplete="current-password"
+            className="field"
+            style={{ paddingInlineEnd: "2.75rem" }}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => setVisible((v) => !v)}
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label={visible ? "הסתר סיסמה" : "הצג סיסמה"}
+            aria-pressed={visible}
+            title={visible ? "הסתר סיסמה" : "הצג סיסמה"}
+            className="absolute inset-y-0 end-1 my-auto flex h-8 w-8 items-center justify-center rounded-lg text-muted transition hover:bg-slate-100 hover:text-ink"
+          >
+            {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        </div>
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         <button type="submit" className="btn-primary mt-5 w-full" disabled={busy || !password}>
           {busy ? "נכנס..." : "כניסה"}

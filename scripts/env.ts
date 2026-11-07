@@ -3,7 +3,7 @@ import { resolve } from "path";
 
 /** Minimal .env loader for scripts (does not override variables already set). */
 export function loadEnv() {
-  for (const name of [".env.local", ".env"]) {
+  for (const name of ["env/.env", ".env.local", ".env"]) {
     const file = resolve(process.cwd(), name);
     if (!existsSync(file)) continue;
     for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {

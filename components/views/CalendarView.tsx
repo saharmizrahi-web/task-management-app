@@ -15,14 +15,23 @@ import {
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useData } from "../DataProvider";
 import { Modal } from "../ui";
-import { PRIORITY_META } from "@/lib/constants";
+import { useHolidays } from "../useHolidays";
+import { HOLIDAY_META, PRIORITY_META } from "@/lib/constants";
 import { MONTHS, WEEKDAYS_SHORT, addDays, fmtDate, parseDate, weekStart, weekdayLong } from "@/lib/date";
-import type { Space, Task } from "@/lib/types";
+import type { Holiday, Space, Task } from "@/lib/types";
 
 const MAX_CHIPS = 3;
 
+// Pastel backgrounds for Friday/Saturday and for chag / chol hamoed (vacation wins when both apply).
+const DAY_TONE = {
+  plain: { in: "bg-white hover:bg-slate-50", out: "bg-slate-50/60", swatch: "" },
+  weekend: { in: "bg-[#eef1fb] hover:bg-[#e6eaf8]", out: "bg-[#eef1fb]/50", swatch: "bg-[#eef1fb]" },
+  vacation: { in: "bg-[#fdeedd] hover:bg-[#fbe5cc]", out: "bg-[#fdeedd]/50", swatch: "bg-[#fdeedd]" },
+};
+
 export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) {
   const { today, openTask, patchTask } = useData();
+  const holidays = useHolidays();
   const t0 = parseDate(today);
   const [ym, setYm] = useState({ y: t0.getUTCFullYear(), m: t0.getUTCMonth() });
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -119,6 +128,7 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
                 lastRow={i >= cells.length - 7}
                 lastCol={i % 7 === 6}
                 tasks={byDay.get(day) ?? []}
+                holidays={holidays.get(day) ?? []}
                 color={space.color}
                 dragging={activeId !== null}
                 onCreate={() => openTask({ mode: "new", space_id: space.id, due_date: day })}
@@ -127,6 +137,18 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
               />
             ))}
           </div>
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-muted">
+          <span className="flex items-center gap-1.5">
+            <span className={`h-3 w-3 rounded border border-line ${DAY_TONE.weekend.swatch}`} /> שישי ושבת
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className={`h-3 w-3 rounded border border-line ${DAY_TONE.vacation.swatch}`} /> חג וחול המועד
+          </span>
+          <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="mr-auto hover:underline">
+            חגים: Hebcal.com
+          </a>
         </div>
 
         {undated.length > 0 && (
@@ -162,6 +184,15 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
           }
         >
           <div className="flex flex-col gap-2">
+            {(holidays.get(dayList) ?? []).length > 0 && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {holidays.get(dayList)!.map((h) => (
+                  <span key={h.title} className="text-xs font-bold" style={{ color: HOLIDAY_META[h.kind].color }}>
+                    {h.title}
+                  </span>
+                ))}
+              </div>
+            )}
             {(byDay.get(dayList) ?? []).map((t) => (
               <ChipFace
                 key={t.id}
@@ -181,22 +212,25 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
 }
 
 function DayCell({
-  day, inMonth, isToday, lastRow, lastCol, tasks, color, dragging, onCreate, onOpen, onMore,
+  day, inMonth, isToday, lastRow, lastCol, tasks, holidays, color, dragging, onCreate, onOpen, onMore,
 }: {
-  day: string; inMonth: boolean; isToday: boolean; lastRow: boolean; lastCol: boolean; tasks: Task[]; color: string; dragging: boolean;
+  day: string; inMonth: boolean; isToday: boolean; lastRow: boolean; lastCol: boolean; tasks: Task[]; holidays: Holiday[]; color: string; dragging: boolean;
   onCreate: () => void; onOpen: (id: number) => void; onMore: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day:${day}` });
-  const num = parseDate(day).getUTCDate();
-  const label = num === 1 ? `${num} ב${MONTHS[parseDate(day).getUTCMonth()]}` : String(num);
+  const date = parseDate(day);
+  const num = date.getUTCDate();
+  const label = num === 1 ? `${num} ב${MONTHS[date.getUTCMonth()]}` : String(num);
   const shown = tasks.slice(0, MAX_CHIPS);
   const extra = tasks.length - shown.length;
+  const weekday = date.getUTCDay();
+  const tone = holidays.some((h) => HOLIDAY_META[h.kind].dayOff) ? "vacation" : weekday === 5 || weekday === 6 ? "weekend" : "plain";
   return (
     <div
       ref={setNodeRef}
       onClick={onCreate}
       className={`group relative flex min-w-0 cursor-pointer flex-col gap-1 overflow-hidden p-1.5 transition ${lastRow ? "" : "border-b"} ${lastCol ? "" : "border-l"} border-line ${
-        inMonth ? "bg-white hover:bg-slate-50" : "bg-slate-50/60"
+        DAY_TONE[tone][inMonth ? "in" : "out"]
       }`}
       style={isOver && dragging ? { background: color + "18", boxShadow: `inset 0 0 0 2px ${color}` } : undefined}
     >
@@ -209,6 +243,15 @@ function DayCell({
         </span>
         <Plus size={14} className="text-slate-300 opacity-0 transition group-hover:opacity-100" />
       </div>
+      {holidays.length > 0 && (
+        <div className={`-mt-1 flex min-w-0 flex-col px-1 ${inMonth ? "" : "opacity-50"}`} title={holidays.map((h) => h.title).join(" · ")}>
+          {holidays.slice(0, 2).map((h) => (
+            <span key={h.title} className="truncate text-[11px] font-semibold leading-4" style={{ color: HOLIDAY_META[h.kind].color }}>
+              {h.title}
+            </span>
+          ))}
+        </div>
+      )}
       {shown.map((t) => (
         <Chip key={t.id} task={t} onOpen={() => onOpen(t.id)} />
       ))}

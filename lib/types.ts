@@ -23,6 +23,14 @@ export interface Task {
   created_at: string;
 }
 
+export type HolidayKind = "chag" | "cholhamoed" | "erev" | "fast" | "hanukkah" | "roshchodesh" | "other";
+
+export interface Holiday {
+  date: string; // YYYY-MM-DD
+  title: string;
+  kind: HolidayKind;
+}
+
 export interface AppData {
   spaces: Space[];
   tasks: Task[];

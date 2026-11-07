@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "db:setup": "tsx scripts/setup-db.ts",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:holidays": "tsx scripts/import-holidays.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

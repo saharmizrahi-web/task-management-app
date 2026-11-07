@@ -1,5 +1,5 @@
 import { q } from "./db";
-import type { AppData, Priority, Space, Status, Task, ViewType } from "./types";
+import type { AppData, Holiday, Priority, Space, Status, Task, ViewType } from "./types";
 import { PRIORITIES, STATUSES, DEFAULT_PRIORITY, DEFAULT_STATUS } from "./constants";
 
 const TASK_COLS = `id, space_id, title, description, priority, status, due_date, completed_at, position, created_at`;
@@ -29,6 +29,13 @@ function normalizeTask(t: Task): Task {
     completed_at: t.completed_at ? new Date(t.completed_at).toISOString() : null,
     created_at: new Date(t.created_at).toISOString(),
   };
+}
+
+/* ---------------- holidays ---------------- */
+
+/** Rows are written by scripts/import-holidays.ts (npm run db:holidays). */
+export async function listHolidays(): Promise<Holiday[]> {
+  return q<Holiday>(`SELECT date, title, kind FROM ms_holidays ORDER BY date, title`);
 }
 
 /* ---------------- spaces ---------------- */

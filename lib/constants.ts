@@ -1,4 +1,4 @@
-import type { Priority, Status, ViewType } from "./types";
+import type { HolidayKind, Priority, Status, ViewType } from "./types";
 
 export const PRIORITIES: Priority[] = ["urgent", "high", "medium", "low"];
 export const STATUSES: Status[] = ["new", "in_progress", "paused", "done"];
@@ -21,6 +21,17 @@ export const VIEW_META: Record<ViewType, { label: string; description: string }>
   kanban: { label: "קנבן", description: "עמודות לפי סטטוס, גרירה בין עמודות" },
   todo: { label: "רשימת TODO", description: "רשימה עם וי, ממוינת לפי עדיפות" },
   calendar: { label: "לוח שנה", description: "חודש שלם לפי תאריך יעד" },
+};
+
+/** Label color per holiday kind. `dayOff` days get the vacation background in the calendar. */
+export const HOLIDAY_META: Record<HolidayKind, { color: string; rank: number; dayOff: boolean }> = {
+  chag: { color: "#c2410c", rank: 0, dayOff: true },
+  cholhamoed: { color: "#c2410c", rank: 1, dayOff: true },
+  erev: { color: "#b45309", rank: 2, dayOff: false },
+  fast: { color: "#b91c1c", rank: 3, dayOff: false },
+  hanukkah: { color: "#ea580c", rank: 4, dayOff: false },
+  other: { color: "#4f46e5", rank: 5, dayOff: false },
+  roshchodesh: { color: "#15803d", rank: 6, dayOff: false },
 };
 
 export const SPACE_COLORS = [

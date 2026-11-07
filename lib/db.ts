@@ -48,6 +48,12 @@ CREATE TABLE IF NOT EXISTS ms_settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ms_holidays (
+  date DATE NOT NULL,
+  title TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('chag','cholhamoed','erev','fast','hanukkah','roshchodesh','other')),
+  PRIMARY KEY (date, title)
+);
 `;
 
 /** Creates tables once per server instance (idempotent). */

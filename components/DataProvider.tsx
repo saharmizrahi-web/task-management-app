@@ -78,6 +78,26 @@ export function DataProvider({ initial, children }: { initial: AppData; children
     setDash(d.dashboardSpaceIds);
   }, []);
 
+  // Pull Google Calendar changes when the app opens or comes back to the foreground. The server throttles.
+  useEffect(() => {
+    let running = false;
+    const sync = async () => {
+      if (running || document.visibilityState !== "visible") return;
+      running = true;
+      try {
+        const r = await api<{ status: string; added?: number; updated?: number; removed?: number }>("/api/sync/google", "POST");
+        if (r.status === "ok" && (r.added || r.updated || r.removed)) await refresh();
+      } catch {
+        // best effort: the app works without it
+      } finally {
+        running = false;
+      }
+    };
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, [refresh]);
+
   const addTask: Ctx["addTask"] = useCallback(async (input) => {
     try {
       const t = await api<Task>("/api/tasks", "POST", input);

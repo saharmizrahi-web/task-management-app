@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS ms_tasks (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS ms_tasks_space_idx ON ms_tasks(space_id);
+ALTER TABLE ms_tasks ADD COLUMN IF NOT EXISTS external_id TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS ms_tasks_external_id_key ON ms_tasks(external_id);
 CREATE TABLE IF NOT EXISTS ms_settings (
   key TEXT PRIMARY KEY,
   value JSONB NOT NULL

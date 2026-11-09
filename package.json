@@ -8,10 +8,13 @@
     "start": "next start",
     "db:setup": "tsx scripts/setup-db.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "db:holidays": "tsx scripts/import-holidays.ts"
+    "db:holidays": "tsx scripts/import-holidays.ts",
+    "gcal:sync": "tsx scripts/sync-google.ts",
+    "test:gcal": "tsx scripts/test-gcal.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
+    "ical.js": "^2.2.1",
     "lucide-react": "^1.52.0",
     "next": "^16.3.8",
     "pg": "^8.23.1",

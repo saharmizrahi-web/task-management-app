@@ -12,7 +12,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useData } from "../DataProvider";
 import { Modal } from "../ui";
 import { useHolidays } from "../useHolidays";
@@ -69,6 +69,8 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
 
   const undated = tasks.filter((t) => !t.due_date && t.status !== "done");
   const active = activeId ? tasks.find((t) => t.id === activeId) : null;
+  // Same as the TODO view: done, and back to "new" when undone.
+  const toggleDone = (t: Task) => patchTask(t.id, { status: t.status === "done" ? "new" : "done" });
 
   const go = (delta: number) =>
     setYm(({ y, m }) => {
@@ -133,6 +135,7 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
                 dragging={activeId !== null}
                 onCreate={() => openTask({ mode: "new", space_id: space.id, due_date: day })}
                 onOpen={(id) => openTask({ mode: "edit", id })}
+                onToggle={toggleDone}
                 onMore={() => setDayList(day)}
               />
             ))}
@@ -156,7 +159,7 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
             <p className="mb-2 text-xs font-bold text-muted">ללא תאריך יעד ({undated.length}). גרור ללוח כדי לקבוע תאריך</p>
             <div className="flex flex-wrap gap-2">
               {undated.map((t) => (
-                <Chip key={t.id} task={t} onOpen={() => openTask({ mode: "edit", id: t.id })} hidden={t.id === activeId} />
+                <Chip key={t.id} task={t} onOpen={() => openTask({ mode: "edit", id: t.id })} onToggle={() => toggleDone(t)} hidden={t.id === activeId} />
               ))}
             </div>
           </div>
@@ -198,6 +201,7 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
                 key={t.id}
                 task={t}
                 wide
+                onToggle={() => toggleDone(t)}
                 onClick={() => {
                   setDayList(null);
                   openTask({ mode: "edit", id: t.id });
@@ -212,10 +216,10 @@ export function CalendarView({ space, tasks }: { space: Space; tasks: Task[] }) 
 }
 
 function DayCell({
-  day, inMonth, isToday, lastRow, lastCol, tasks, holidays, color, dragging, onCreate, onOpen, onMore,
+  day, inMonth, isToday, lastRow, lastCol, tasks, holidays, color, dragging, onCreate, onOpen, onToggle, onMore,
 }: {
   day: string; inMonth: boolean; isToday: boolean; lastRow: boolean; lastCol: boolean; tasks: Task[]; holidays: Holiday[]; color: string; dragging: boolean;
-  onCreate: () => void; onOpen: (id: number) => void; onMore: () => void;
+  onCreate: () => void; onOpen: (id: number) => void; onToggle: (t: Task) => void; onMore: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day:${day}` });
   const date = parseDate(day);
@@ -253,7 +257,7 @@ function DayCell({
         </div>
       )}
       {shown.map((t) => (
-        <Chip key={t.id} task={t} onOpen={() => onOpen(t.id)} />
+        <Chip key={t.id} task={t} onOpen={() => onOpen(t.id)} onToggle={() => onToggle(t)} />
       ))}
       {extra > 0 && (
         <button
@@ -270,7 +274,7 @@ function DayCell({
   );
 }
 
-function Chip({ task, onOpen, hidden }: { task: Task; onOpen: () => void; hidden?: boolean }) {
+function Chip({ task, onOpen, onToggle, hidden }: { task: Task; onOpen: () => void; onToggle: () => void; hidden?: boolean }) {
   const { setNodeRef, listeners, attributes } = useDraggable({ id: `task:${task.id}` });
   return (
     <div
@@ -283,22 +287,46 @@ function Chip({ task, onOpen, hidden }: { task: Task; onOpen: () => void; hidden
       }}
       className={`touch-manipulation ${hidden ? "opacity-30" : ""}`}
     >
-      <ChipFace task={task} />
+      <ChipFace task={task} onToggle={onToggle} />
     </div>
   );
 }
 
-function ChipFace({ task, overlay, wide, onClick }: { task: Task; overlay?: boolean; wide?: boolean; onClick?: () => void }) {
+// Keeps a press on the check button from opening the task or starting a drag.
+const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+
+function ChipFace({ task, overlay, wide, onClick, onToggle }: { task: Task; overlay?: boolean; wide?: boolean; onClick?: () => void; onToggle?: () => void }) {
   const done = task.status === "done";
   const m = PRIORITY_META[task.priority];
+  const label = done ? "החזר למשימה פתוחה" : "סמן כהושלמה";
   return (
     <div
       onClick={onClick}
-      className={`flex cursor-pointer items-center gap-1.5 truncate rounded-md px-2 text-[12px] font-medium leading-6 transition hover:brightness-95 ${wide ? "py-1.5" : ""} ${overlay ? "shadow-lg" : ""}`}
-      style={done ? { background: "#f1f5f9", color: "#94a3b8", textDecoration: "line-through" } : { background: m.color, color: "#fff" }}
+      className={`flex cursor-pointer items-center gap-1.5 truncate rounded-md px-2 text-[12px] font-medium leading-6 transition hover:brightness-95 ${wide ? "py-1.5" : ""} ${overlay ? "shadow-lg" : ""} ${onToggle ? "pr-1" : ""}`}
+      style={done ? { background: "#f1f5f9", color: "#94a3b8" } : { background: m.color, color: "#fff" }}
       title={task.title}
     >
-      <span className="truncate">{task.title}</span>
+      {onToggle && (
+        <button
+          type="button"
+          aria-label={label}
+          title={label}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          onPointerDown={stop}
+          onMouseDown={stop}
+          onTouchStart={stop}
+          onKeyDown={stop}
+          className={`relative flex shrink-0 items-center justify-center rounded-full border-[1.5px] transition hover:scale-110 after:absolute after:-inset-1.5 after:content-[''] ${
+            wide ? "h-5 w-5" : "h-4 w-4"
+          } ${done ? "border-green-600 bg-green-600 text-white" : "border-white/85 hover:bg-white/30"}`}
+        >
+          {done && <Check size={wide ? 13 : 11} strokeWidth={3} />}
+        </button>
+      )}
+      <span className={`truncate ${done ? "line-through" : ""}`}>{task.title}</span>
     </div>
   );
 }

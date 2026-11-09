@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, Check, Flame, Plus } from "lucide-react";
+import { AlertTriangle, CalendarClock, CalendarDays, CalendarRange, Check, Flame, Plus } from "lucide-react";
 import { useData } from "./DataProvider";
 import { DueChip, PriorityChip, SpaceDot, isOverdue } from "./ui";
 import { PRIORITY_META } from "@/lib/constants";
-import { weekStart, weekdayLong, parseDate, MONTHS } from "@/lib/date";
+import { addDays, fmtDate, weekStart, weekdayLong, parseDate, MONTHS } from "@/lib/date";
 import type { Space, Task } from "@/lib/types";
 
 export function Dashboard() {
@@ -23,13 +23,24 @@ export function Dashboard() {
   const dueToday = open.filter((t) => t.due_date === today).sort(byUrgency);
   const overdue = open.filter((t) => isOverdue(t, today)).sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
 
+  // Week and month don't repeat each other or "today": the week runs from tomorrow
+  // to Saturday, the month from the day after that week to the end of the month.
+  const d = parseDate(today);
+  const weekEnd = addDays(weekStart(today), 6);
+  const monthEnd = fmtDate(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)));
+  const byDate = (a: Task, b: Task) => a.due_date!.localeCompare(b.due_date!) || rank(a) - rank(b);
+  const dueBetween = (after: string, until: string) =>
+    open.filter((t) => t.due_date && t.due_date > after && t.due_date <= until).sort(byDate);
+  const thisWeek = dueBetween(today, weekEnd);
+  const thisMonth = dueBetween(weekEnd, monthEnd);
+  const monthEndText = `עד ${parseDate(monthEnd).getUTCDate()} ב${MONTHS[d.getUTCMonth()]}`;
+
   function toggle(id: number) {
     const next = selSet.has(id) ? selected.filter((x) => x !== id) : [...selected, id];
     setDashboardSpaces(next.length === spaces.length ? null : next);
   }
 
-  const d = parseDate(today);
-  const dateText = `יום ${weekdayLong(today)}, ${d.getUTCDate()} ב${MONTHS[d.getUTCMonth()]}`;
+  const dateText =`יום ${weekdayLong(today)}, ${d.getUTCDate()} ב${MONTHS[d.getUTCMonth()]}`;
 
   if (spaces.length === 0) {
     return (
@@ -79,6 +90,11 @@ export function Dashboard() {
             <Section title="באיחור" icon={<AlertTriangle size={18} />} tone="#e11d48" tasks={overdue} spaces={spaces} today={today} empty="אין משימות באיחור" />
           </div>
 
+          <div className="mb-8 grid gap-4 lg:grid-cols-2">
+            <Section title="השבוע" hint="מחר עד שבת" icon={<CalendarRange size={18} />} tone="#4f46e5" tasks={thisWeek} spaces={spaces} today={today} empty="אין משימות בהמשך השבוע" />
+            <Section title="החודש" hint={`אחרי השבוע, ${monthEndText}`} icon={<CalendarDays size={18} />} tone="#0d9488" tasks={thisMonth} spaces={spaces} today={today} empty="אין משימות בהמשך החודש" />
+          </div>
+
           <h2 className="mb-3 text-base font-bold">המרחבים</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {shownSpaces.map((s) => (
@@ -90,12 +106,13 @@ export function Dashboard() {
     </div>
   );
 
-  function Section({ title, icon, tone, tasks: list, spaces: all, today: td, empty }: { title: string; icon: React.ReactNode; tone: string; tasks: Task[]; spaces: Space[]; today: string; empty: string }) {
+  function Section({ title, hint, icon, tone, tasks: list, spaces: all, today: td, empty }: { title: string; hint?: string; icon: React.ReactNode; tone: string; tasks: Task[]; spaces: Space[]; today: string; empty: string }) {
     return (
       <section className="card flex flex-col overflow-hidden">
         <header className="flex items-center gap-2 border-b border-line px-4 py-3" style={{ color: tone }}>
           {icon}
           <h2 className="text-sm font-bold">{title}</h2>
+          {hint && <span className="text-xs text-muted">{hint}</span>}
           <span className="mr-auto rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: tone + "15" }}>{list.length}</span>
         </header>
         <ul className="max-h-80 flex-1 divide-y divide-line overflow-y-auto">
